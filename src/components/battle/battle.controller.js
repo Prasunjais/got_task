@@ -10,26 +10,65 @@ class userController extends BaseController {
   // constructor 
   constructor() {
     super();
-    this.messageTypes = this.messageTypes.userAuthentication;
+    this.messageTypes = this.messageTypes.battle;
   }
 
   // do something 
-  doSomething = async (req, res) => {
+  uploadTheBattleFromCsv = async (req, res) => {
     try {
-      info('running the controller');
+      info('Uploading the CSV into the database !');
 
-      const resp = {
-        status: 200,
-        message: 'Its working'
-      };
+      // pushing the attackers and defenders into a single array of names
+      for (let i = 0; i < req.body.battleArray.length; i++) {
+        let attackerArray = [], defenderArray = [];
+        if (req.body.battleArray[i].attacker_1 !== '') attackerArray.push({
+          name: req.body.battleArray[i].attacker_1
+        });
+        if (req.body.battleArray[i].attacker_2 !== '') attackerArray.push({
+          name: req.body.battleArray[i].attacker_2
+        });
+        if (req.body.battleArray[i].attacker_3 !== '') attackerArray.push({
+          name: req.body.battleArray[i].attacker_3
+        });
+        if (req.body.battleArray[i].attacker_4 !== '') attackerArray.push({
+          name: req.body.battleArray[i].attacker_4
+        });
+        // defenders
+        if (req.body.battleArray[i].defender_1 !== '') defenderArray.push({
+          name: req.body.battleArray[i].defender_1
+        });
+        if (req.body.battleArray[i].defender_2 !== '') defenderArray.push({
+          name: req.body.battleArray[i].defender_2
+        });
+        if (req.body.battleArray[i].defender_3 !== '') defenderArray.push({
+          name: req.body.battleArray[i].defender_3
+        });
+        if (req.body.battleArray[i].defender_4 !== '') defenderArray.push({
+          name: req.body.battleArray[i].defender_4
+        });
+
+        // initializing the boolean variable
+        if (req.body.battleArray[i].summer == 0) req.body.battleArray[i].summer = false
+        else req.body.battleArray[i].summer = true
+
+        // attacker outcome
+        if (req.body.battleArray[i].attackerOutcome == '') req.body.battleArray[i].attackerOutcome = 'loss';
+
+        // injecting into the array of object
+        req.body.battleArray[i].attackers = attackerArray;
+        req.body.battleArray[i].defenders = defenderArray;
+      }
+
+      // inserting into the database
+      let battlesCreated = await Model.insertMany(req.body.battleArray);
 
       // success response 
-      return this.success(req, res, this.status.HTTP_OK, resp, this.messageTypes.loggedInSuccess);
+      return this.success(req, res, this.status.HTTP_OK, battlesCreated, this.messageTypes.battlesCreatedSuccessfully);
 
       // catch any runtime error 
     } catch (e) {
       error(e);
-      this.errors(req, res, this.status.HTTP_INTERNAL_SERVER_ERROR, this.exceptions.internalServerErr(req, err));
+      this.errors(req, res, this.status.HTTP_INTERNAL_SERVER_ERROR, this.exceptions.internalServerErr(req, e));
     }
   }
 

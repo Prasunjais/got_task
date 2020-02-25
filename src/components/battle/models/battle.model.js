@@ -20,11 +20,9 @@ const battleSchema = new Schema({
   },
   attackerKing: {
     type: String,
-    required: true
   },
   defenderKing: {
     type: String,
-    required: true
   },
   attackers: [{
     name: {
@@ -49,7 +47,7 @@ const battleSchema = new Schema({
   majorDeath: {
     type: Number
   },
-  MajorCapture: {
+  majorCapture: {
     type: Number
   },
   attackerSize: {
