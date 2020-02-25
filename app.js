@@ -12,6 +12,7 @@ app.use(appLogger.requestDetails(appLogger));
 // const authenticate = require('./utils/authenticate');
 app.enable('trust proxy');
 middlewares(app);
+require('./src/config/db');
 
 /* Router setup */
 const openRouter = express.Router(); // Open routes
