@@ -8,11 +8,13 @@ const Response = require('../../responses/response');
 
 // add joi schema 
 const schemas = {
-  validUser: Joi.object().keys({
-    email: Joi.string().trim().label('email').required().max(256),
-    password: Joi.string().trim().label('password').required().min(6).max(100),
+  getLocations: Joi.object().keys({
+    query: {
+      limit: Joi.number().integer().label('limit').required().max(50).min(1),
+      skip: Joi.number().integer().label('skip').required().min(0)
+    },
   }),
-  
+
 };
 
 const options = {
@@ -36,13 +38,13 @@ const options = {
 
 module.exports = {
   // exports validate admin signin 
-  joiLogInValidate: (req, res, next) => {
+  getLocations: (req, res, next) => {
     // getting the schemas 
-    let schema = schemas.validUser;
+    let schema = schemas.getLocations;
     let option = options.basic;
 
     // validating the schema 
-    schema.validate(req.body, option).then(() => {
+    schema.validate({ query: req.query }, option).then(() => {
       next();
       // if error occured
     }).catch((err) => {

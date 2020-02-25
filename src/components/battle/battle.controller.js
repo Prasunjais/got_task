@@ -6,14 +6,14 @@ const {
 } = require('../../utils').logging;
 
 // getting the model 
-class userController extends BaseController {
+class battleController extends BaseController {
   // constructor 
   constructor() {
     super();
     this.messageTypes = this.messageTypes.battle;
   }
 
-  // do something 
+  // upload the battle from csv 
   uploadTheBattleFromCsv = async (req, res) => {
     try {
       info('Uploading the CSV into the database !');
@@ -72,24 +72,49 @@ class userController extends BaseController {
     }
   }
 
-  // do something else 
-  doSomethingElse = async (req, res) => {
+  // get the list of location 
+  getAllLocationsOfBattle = async (req, res) => {
     try {
-      const resp = {
-        status: 200,
-        message: 'Its working'
+      info('Get all the locations of the battle !');
+      let limit = parseInt(req.query.limit || 20),
+        skip = parseInt(req.query.skip || 0);
+
+      // fields to project
+      let fieldsToSelectObject = {
+        'location': 1
       };
 
+      // get all the locations 
+      let locations = await Model.aggregate([{
+        '$project': fieldsToSelectObject
+      }, {
+        '$skip': skip
+      }, {
+        '$limit': limit
+      }, {
+        '$sort': {
+          createdAt: -1
+        }
+      }]).allowDiskUse(true);
+
       // success response 
-      return this.success(req, res, this.status.HTTP_OK, resp);
+      return this.success(req, res, this.status.HTTP_OK,
+        {
+          results: locations,
+          pageMeta: {
+            skip: parseInt(skip),
+            pageSize: limit,
+            total: locations.length
+          }
+        }, this.messageTypes.locationFetchedSuccessfully);
 
       // catch any runtime error 
     } catch (e) {
       error(e);
-      this.errors(req, res, this.status.HTTP_INTERNAL_SERVER_ERROR, this.exceptions.internalServerErr(req, err));
+      this.errors(req, res, this.status.HTTP_INTERNAL_SERVER_ERROR, this.exceptions.internalServerErr(req, e));
     }
   }
 }
 
 // exporting the modules 
-module.exports = new userController();
+module.exports = new battleController();
