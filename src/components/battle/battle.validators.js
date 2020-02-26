@@ -15,6 +15,17 @@ const schemas = {
     },
   }),
 
+  // search battle
+  searchBattle: Joi.object().keys({
+    query: {
+      limit: Joi.number().integer().label('limit').required().max(50).min(1),
+      skip: Joi.number().integer().label('skip').required().min(0),
+      king: Joi.string().trim().label('king search query').allow('').optional(),
+      location: Joi.string().trim().label('location search query').allow('').optional(),
+      type: Joi.string().trim().label('type search query').allow('').optional(),
+    },
+  }),
+
 };
 
 const options = {
@@ -41,6 +52,27 @@ module.exports = {
   getLocations: (req, res, next) => {
     // getting the schemas 
     let schema = schemas.getLocations;
+    let option = options.basic;
+
+    // validating the schema 
+    schema.validate({ query: req.query }, option).then(() => {
+      next();
+      // if error occured
+    }).catch((err) => {
+      let error = [];
+      err.details.forEach(element => {
+        error.push(element.message);
+      });
+
+      // returning the response 
+      Response.joierrors(req, res, err);
+    });
+  },
+
+  // search battle 
+  searchBattle: (req, res, next) => {
+    // getting the schemas 
+    let schema = schemas.searchBattle;
     let option = options.basic;
 
     // validating the schema 

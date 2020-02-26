@@ -114,6 +114,131 @@ class battleController extends BaseController {
       this.errors(req, res, this.status.HTTP_INTERNAL_SERVER_ERROR, this.exceptions.internalServerErr(req, e));
     }
   }
+
+  // get the total number of battle occured
+  getTotalNumberOfBattleOccured = async (req, res) => {
+    try {
+      info('Get all the total battle occured !');
+
+      // get all the locations 
+      let totalCount = await Model.aggregate([{
+        '$match': {
+          'status': true
+        }
+      }, {
+        '$count': 'battleNumber'
+      }]).allowDiskUse(true);
+
+      // success response 
+      return this.success(req, res, this.status.HTTP_OK,
+        {
+          count: totalCount.length ? totalCount[0] : 0,
+        }, this.messageTypes.totalNumberOfBattleOccured);
+
+      // catch any runtime error 
+    } catch (e) {
+      error(e);
+      this.errors(req, res, this.status.HTTP_INTERNAL_SERVER_ERROR, this.exceptions.internalServerErr(req, e));
+    }
+  }
+
+  // search battle
+  searchBattle = async (req, res) => {
+    try {
+      info('Get all the locations of the battle !');
+      let limit = parseInt(req.query.limit || 20),
+        skip = parseInt(req.query.skip || 0);
+
+      // fields to project
+      let fieldsToSelectObject = {
+        'name': 1,
+        'year': 1,
+        'battleNumber': 1,
+        'attackerKing': 1,
+        'defenderKing': 1,
+        'attackers': 1,
+        'defenders': 1,
+        'attackerOutcome': 1,
+        'battleType': 1,
+        'majorDeath': 1,
+        'majorCapture': 1,
+        'attackerSize': 1,
+        'defenderSize': 1,
+        'attackerCommander': 1,
+        'defenderCommander': 1,
+        'summer': 1,
+        'location': 1,
+        'region': 1,
+        'note': 1,
+      };
+
+      let searchObject = {};
+
+      // king name 
+      if (req.query.king) searchObject = {
+        ...searchObject,
+        '$or': [{
+          'attackerKing': {
+            $regex: req.query.king,
+            $options: 'is'
+          }
+        }, {
+          'defenderKing': {
+            $regex: req.query.king,
+            $options: 'is'
+          }
+        }]
+      }
+
+      // location name 
+      if (req.query.location) searchObject = {
+        ...searchObject,
+        'location': {
+          $regex: req.query.location,
+          $options: 'is'
+        }
+      }
+
+      // type
+      if (req.query.type) searchObject = {
+        ...searchObject,
+        'battleType': {
+          $regex: req.query.type,
+          $options: 'is'
+        }
+      }
+
+      // get all the locations 
+      let locations = await Model.aggregate([
+        {
+          '$project': fieldsToSelectObject
+        }, {
+          '$match': {
+            ...searchObject
+          }
+        }, {
+          '$skip': skip
+        }, {
+          '$limit': limit
+        }]).allowDiskUse(true);
+
+      // success response 
+      return this.success(req, res, this.status.HTTP_OK,
+        {
+          results: locations,
+          pageMeta: {
+            skip: parseInt(skip),
+            pageSize: limit,
+            total: locations.length
+          }
+        }, this.messageTypes.locationFetchedSuccessfully);
+
+      // catch any runtime error 
+    } catch (e) {
+      error(e);
+      this.errors(req, res, this.status.HTTP_INTERNAL_SERVER_ERROR, this.exceptions.internalServerErr(req, e));
+    }
+  }
 }
 
 // exporting the modules 
